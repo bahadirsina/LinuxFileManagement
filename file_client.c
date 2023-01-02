@@ -30,26 +30,20 @@ void *listenme(){
 	printf("it writes the data from File_client to the file.\n");
 	printf("Exit  	-> This command: Ends the corresponding file_client thread, \n");
 	printf("communication is broken.\n");
-	printf("Comnd 	-> This command: Allows you to relist commands.\n");
 	while (1){
 		fd1 = open(myfifo,O_WRONLY);
 		fgets(str2, 80, stdin);
 		write(fd1, str2, strlen(str2)+1);
 		close(fd1);
-		char *cp7 = "Exit\n";
-		if (strcmp(str2, cp7) == 0){ //exit 
-		times = time(NULL);
-		printf("TIME : %s",ctime(&times));
-		printf("Successfully thread is finished...\n");
-		break;
-		} else {
-		printf("Wrong command entered! Enter the correct command.\n");
-		printf("If you want to relearn commands, use 'Comnd'.\n");
-		}
 		fd1 = open(myfifo,O_RDONLY); // Open FIFO for read only
 		read(fd1, str1, 80);
 		printf("User1: %s\n", str1);
 		close(fd1);
+		char *cp7 = "Exit\n";
+		if (strcmp(str1, cp7) == 0){ //exit 
+		printf("Successfully thread is finished...\n");
+		break;
+		} 
 	}
 	
 return NULL;
