@@ -22,7 +22,7 @@ return NULL;
 int main(int argc, char *argv[]) {
 	char File_List[20][20];
 	int flidx;
-	int flidx2;
+	int flidx2 = 0;
 	pthread_t fmt;
 	void *status;
 	int t_suc = pthread_create(&fmt, NULL,listenme,NULL);
@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
     	char *arr2;
     	char *cp7 = "Exit\n";
  	char *cp1 = "Create";
+ 	char *cp2 = "Delete";
     	while (1) {
 		fd = open(myfifo, O_RDONLY);
 		read(fd, arr1, sizeof(arr1));
@@ -98,8 +99,29 @@ int main(int argc, char *argv[]) {
 				close(fd);
 			}
 			
-		}
-		else {
+		} else if (strcmp(cp, cp2) == 0){
+			for(flidx = 0; flidx < 20; flidx++) { 
+				if(strcmp(File_List[flidx] , cp0) == 0){
+					strcpy(File_List[flidx]," ");
+					char* fName = cp0; 
+					int result = remove(fName) ;
+	  				arr2 = "The file name is removed from file_list and the file is deleted in the system.";
+					fd = open(myfifo, O_WRONLY); // Open FIFO for write only
+					//fgets(arr2, 80, stdin);
+					write(fd, arr2, strlen(arr2)+1);
+					close(fd);
+					break;
+  					
+				}
+			}
+			if(flidx == 20){
+	       			arr2 = "The file to be deleted was not found.";
+				fd = open(myfifo, O_WRONLY); // Open FIFO for write only
+				//fgets(arr2, 80, stdin);
+				write(fd, arr2, strlen(arr2)+1);
+				close(fd);
+			}
+		}else {
 			arr2 = "Wrong command entered! Enter the correct command.\n";
 			fd = open(myfifo, O_WRONLY); // Open FIFO for write only
 			//fgets(arr2, 80, stdin);
