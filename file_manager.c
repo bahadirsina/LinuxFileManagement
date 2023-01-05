@@ -40,9 +40,13 @@ int main(int argc, char *argv[]) {
     	mkfifo(myfifo, 0666);
     	char arr1[80];
     	char *arr2;
+    	char arr3[80];
+    	char arr4[80];
     	char *cp7 = "Exit\n";
  	char *cp1 = "Create";
  	char *cp2 = "Delete";
+ 	char *cp3 = "Read";
+ 	char *cp4 = "Write";
     	while (1) {
 		fd = open(myfifo, O_RDONLY);
 		read(fd, arr1, sizeof(arr1));
@@ -62,7 +66,11 @@ int main(int argc, char *argv[]) {
         			}
         		}
         	char *cp = tmp[0]; // Values were stored for comparison.
+        	char tarr[20];
+        	//tarr[20] = tmp[1];
+        	//strcat(tarr,"\0");
        		char *cp0 = tmp[1]; // Filename
+       		char *cpp1 = tmp[2];  // Data for write file
 		char *cp7 = "Exit\n";
 		if (strcmp(arr1, cp7) == 0){ //exit 
 			arr2= "Exit\n";
@@ -104,7 +112,7 @@ int main(int argc, char *argv[]) {
 				if(strcmp(File_List[flidx] , cp0) == 0){
 					strcpy(File_List[flidx]," ");
 					char* fName = cp0; 
-					int result = remove(fName) ;
+					int result = remove(fName) ; // delete files in system
 	  				arr2 = "The file name is removed from file_list and the file is deleted in the system.";
 					fd = open(myfifo, O_WRONLY); // Open FIFO for write only
 					//fgets(arr2, 80, stdin);
@@ -121,7 +129,68 @@ int main(int argc, char *argv[]) {
 				write(fd, arr2, strlen(arr2)+1);
 				close(fd);
 			}
-		}else {
+		}else if (strcmp(cp, cp3) == 0){
+			for(flidx = 0; flidx < 20; flidx++) { 
+				if(strcmp(File_List[flidx] , cp0) == 0){
+					FILE *fp;
+					char* fName = cp0; 
+					
+					if ((fp = fopen(fName, "r"))) { // File is opened and check if there is a file with "r". 
+						while(!feof(fp)){  // All lines in the file traversed.
+							strcat(arr4,arr3);
+							fgets(arr3,80,fp);
+							
+						}
+	  					fclose(fp);  // File is closed.
+  					} else{
+      						printf("Error: File is not open!\n");
+      						exit(1);
+  					}
+					fd = open(myfifo, O_WRONLY); // Open FIFO for write only
+					//fgets(arr2, 80, stdin);
+					write(fd, arr4, strlen(arr4)+1);
+					close(fd);
+					break;
+  					
+				}
+			}
+			if(flidx == 20){
+	       			arr2 = "The requested file was not found.";
+				fd = open(myfifo, O_WRONLY); // Open FIFO for write only
+				//fgets(arr2, 80, stdin);
+				write(fd, arr2, strlen(arr2)+1);
+				close(fd);
+			}
+		} else if (strcmp(cp, cp4) == 0){
+			for(flidx = 0; flidx < 20; flidx++) { 
+			       	strcat(cp0,"\0");
+				if(strcmp(File_List[flidx] , cp0) == 0){
+					FILE *fp;
+					char* fName = cp0; 
+					char* rDatas = cpp1;
+					if ((fp = fopen(fName, "w"))) { // File is opened and check if there is a file with "w". 
+						fprintf(fp,"%s\n",rDatas); 
+	  					fclose(fp);  // File is closed.
+  					} else{
+      						printf("Error: File is not open!\n");
+      						exit(1);
+  					}
+  					arr2 = "The entered data is written to the file.";
+					fd = open(myfifo, O_WRONLY); // Open FIFO for write only
+					//fgets(arr2, 80, stdin);
+					write(fd, arr2, strlen(arr2)+1);
+					close(fd);
+					break;
+				}
+			}
+			if(flidx == 20){
+	       			arr2 = "The requested file was not found.";
+				fd = open(myfifo, O_WRONLY); // Open FIFO for write only
+				//fgets(arr2, 80, stdin);
+				write(fd, arr2, strlen(arr2)+1);
+				close(fd);
+			}
+		} else {
 			arr2 = "Wrong command entered! Enter the correct command.\n";
 			fd = open(myfifo, O_WRONLY); // Open FIFO for write only
 			//fgets(arr2, 80, stdin);
