@@ -14,14 +14,13 @@
 #include <semaphore.h>
 
 pthread_mutex_t lock;
-int v = 0;
 void *listenme(){
-	pthread_mutex_lock(&lock);
+	pthread_mutex_lock(&lock);  // mutex locked prevent critical region
 	int fd1;
-	char * myfifo = "/tmp/myfifo"; // FIFO file path
-	mkfifo(myfifo, 0666);
+	char * file_manager_named_pipe = "/tmp/file_manager_named_pipe"; // FIFO file path
+	mkfifo(file_manager_named_pipe, 0666); // create named_pipe thanks to mkfifo
 	char str1[80], str2[80];
-	printf("Create  -> This command: If there is no file name in File_List, \n");
+	printf("Create  -> This command: If there is no file name in File_List, \n");  //Commands to be used in the program and their explanations.
 	printf("it adds the file name to the empty line \n");
 	printf("and creates the file in the system.\n");
 	printf("Delete  -> This command: If there is a file name in File_List, \n");
@@ -35,42 +34,44 @@ void *listenme(){
 	printf("communication is broken.\n");
 	while (1){
 		
-		fd1 = open(myfifo,O_WRONLY);
-		fgets(str2, 80, stdin);
-		write(fd1, str2, strlen(str2)+1);
+		fd1 = open(file_manager_named_pipe,O_WRONLY);  // Open FIFO for write only
+		fgets(str2, 80, stdin);				// make a listen command 
+		write(fd1, str2, strlen(str2)+1);		// write a command in named_pipe file
 		close(fd1);
-		fd1 = open(myfifo,O_RDONLY); // Open FIFO for read only
-		read(fd1, str1, 80);
+		fd1 = open(file_manager_named_pipe,O_RDONLY); // Open FIFO for read only
+		read(fd1, str1, 80);			      // take a response from file_manager	
 		printf("User1: %s\n", str1);
 		close(fd1);
 		char *cp7 = "Exit\n";
-		if (strcmp(str1, cp7) == 0){ //exit 
+		if (strcmp(str1, cp7) == 0){ 		//If exit command is received, the thread is terminated.
 		printf("Successfully thread is finished...\n");
 		break;
-		
 		} 
 	}
-	pthread_mutex_lock(&lock);
+	pthread_mutex_unlock(&lock);  // mutex unlocked prevent critical region
 return NULL;
 
 }
 int main(int argc, char *argv[]) {
-	int threadCount = 5;
-	pthread_t fcts[threadCount];
-	void *status;
-	if(pthread_mutex_init(&lock,NULL) != 0){
-		printf("Error: Mutex init!");
-		return 1;
-	
+	pthread_t fct;
+	void *status;  
+	int t_suc2 = pthread_create(&fct, NULL,listenme,NULL); // create thread and give listenme function as a parameter
+	if(t_suc2 != 0){
+		perror("Thread is not create!!");
+		exit(1);
 	}
-	for(int i = 0; i < threadCount; ++i){
-		pthread_create(fcts+i, NULL,listenme,NULL);
+	int tj_suc2 = pthread_join(fct, &status);   // join thread
+	if(tj_suc2 != 0){
+		perror("Thread is not join!!");
+		exit(1);
 	}
-	for(int i = 0; i < threadCount; ++i){
-		pthread_join(fcts[i], &status);
+	int pipes[10];			// create 5 pipe for communicate client server 
+	for(int y = 0; y < 5; y++){
+		if(pipe(pipes + y*2) < 0){
+			perror("Error: pipe");
+			exit(1);
+		}
 	}
-	pthread_mutex_destroy(&lock);
 
     return 0;
 }
-
