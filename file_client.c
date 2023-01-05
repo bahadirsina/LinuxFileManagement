@@ -11,9 +11,12 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <semaphore.h>
 
+pthread_mutex_t lock;
+int v = 0;
 void *listenme(){
-	time_t times = time(NULL);
+	pthread_mutex_lock(&lock);
 	int fd1;
 	char * myfifo = "/tmp/myfifo"; // FIFO file path
 	mkfifo(myfifo, 0666);
@@ -31,6 +34,7 @@ void *listenme(){
 	printf("Exit  	-> This command: Ends the corresponding file_client thread, \n");
 	printf("communication is broken.\n");
 	while (1){
+		
 		fd1 = open(myfifo,O_WRONLY);
 		fgets(str2, 80, stdin);
 		write(fd1, str2, strlen(str2)+1);
@@ -43,25 +47,29 @@ void *listenme(){
 		if (strcmp(str1, cp7) == 0){ //exit 
 		printf("Successfully thread is finished...\n");
 		break;
+		
 		} 
 	}
-	
+	pthread_mutex_lock(&lock);
 return NULL;
 
 }
 int main(int argc, char *argv[]) {
-	pthread_t fct;
+	int threadCount = 5;
+	pthread_t fcts[threadCount];
 	void *status;
-	int t_suc2 = pthread_create(&fct, NULL,listenme,NULL);
-	if(t_suc2 != 0){
-		perror("Thread is not create!!");
-		exit(1);
+	if(pthread_mutex_init(&lock,NULL) != 0){
+		printf("Error: Mutex init!");
+		return 1;
+	
 	}
-	int tj_suc2 = pthread_join(fct, &status);
-	if(tj_suc2 != 0){
-		perror("Thread is not join!!");
-		exit(1);
+	for(int i = 0; i < threadCount; ++i){
+		pthread_create(fcts+i, NULL,listenme,NULL);
 	}
+	for(int i = 0; i < threadCount; ++i){
+		pthread_join(fcts[i], &status);
+	}
+	pthread_mutex_destroy(&lock);
 
     return 0;
 }
